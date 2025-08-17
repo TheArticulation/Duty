@@ -116,19 +116,7 @@ The `x/duty` module is designed to work seamlessly with Hyperlane:
 
 - [Module Overview](docs/overview.md) - Detailed technical documentation
 - [Events Documentation](docs/events.md) - Event types and sidecar/indexer integration
-- [Sidecar Setup](docs/sidecar.md) - Lightweight service for Hyperlane integration
 
-## Development
-
-### Building
-
-```bash
-# Build the module
-go build ./x/duty
-
-# Run tests
-go test ./x/duty/...
-```
 
 ### Module Structure
 
