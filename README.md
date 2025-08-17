@@ -72,8 +72,6 @@ The `x/duty` module is designed to work seamlessly with Hyperlane:
 ## Documentation
 
 - [Module Overview](docs/overview.md) - Detailed technical documentation
-- [API Reference](docs/api.md) - Complete API documentation
-- [Integration Guide](docs/integration.md) - How to integrate with your app
 
 ## Development
 
