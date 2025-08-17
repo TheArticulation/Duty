@@ -1,70 +1,30 @@
 package keeper
 
 import (
-	"context"
+	context "context"
+	"yourapp/x/duty/types"
 
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
-
-	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/query"
-	"github.com/cosmos/cosmos-sdk/x/duty/types"
 )
 
-// Duty implements the Query/Duty gRPC method
-func (k Keeper) Duty(c context.Context, req *types.QueryGetDutyRequest) (*types.QueryGetDutyResponse, error) {
-	if req == nil {
-		return nil, status.Error(codes.InvalidArgument, "invalid request")
-	}
+type queryServer struct{ k Keeper }
 
-	ctx := sdk.UnwrapSDKContext(c)
-	duty, found := k.GetDuty(ctx, req.Id)
-	if !found {
-		return nil, status.Errorf(codes.NotFound, "duty not found")
-	}
+func NewQueryServer(k Keeper) types.QueryServer { return &queryServer{k: k} }
 
-	return &types.QueryGetDutyResponse{Duty: &duty}, nil
+func (q *queryServer) DutySet(goCtx context.Context, _ *types.QueryDutySetRequest) (*types.QueryDutySetResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	set, params := q.k.GetDutySet(ctx)
+	return &types.QueryDutySetResponse{Validators: set, QuorumNum: params.QuorumNumerator, QuorumDen: params.QuorumDenominator}, nil
 }
-
-// DutyAll implements the Query/DutyAll gRPC method
-func (k Keeper) DutyAll(c context.Context, req *types.QueryAllDutyRequest) (*types.QueryAllDutyResponse, error) {
-	if req == nil {
-		return nil, status.Error(codes.InvalidArgument, "invalid request")
-	}
-
-	ctx := sdk.UnwrapSDKContext(c)
-
-	store := ctx.KVStore(k.storeKey)
-	dutyStore := prefix.NewStore(store, types.KeyPrefix(types.DutyKey))
-
-	var duties []types.Duty
-	pageRes, err := query.Paginate(dutyStore, req.Pagination, func(key []byte, value []byte) error {
-		var duty types.Duty
-		if err := k.cdc.Unmarshal(value, &duty); err != nil {
-			return err
-		}
-
-		duties = append(duties, duty)
-		return nil
-	})
-
+func (q *queryServer) DutyMetadata(goCtx context.Context, req *types.QueryDutyMetadataRequest) (*types.QueryDutyMetadataResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	consAddr, err := sdk.ConsAddressFromBech32(req.ConsAddr)
 	if err != nil {
-		return nil, status.Error(codes.Internal, err.Error())
+		return nil, err
 	}
-
-	return &types.QueryAllDutyResponse{Duty: duties, Pagination: pageRes}, nil
-}
-
-// Params implements the Query/Params gRPC method
-func (k Keeper) Params(c context.Context, req *types.QueryParamsRequest) (*types.QueryParamsResponse, error) {
-	if req == nil {
-		return nil, status.Error(codes.InvalidArgument, "invalid request")
+	meta, ok := q.k.GetDutyMetadata(ctx, consAddr)
+	if !ok {
+		return &types.QueryDutyMetadataResponse{}, nil
 	}
-
-	ctx := sdk.UnwrapSDKContext(c)
-	params := k.GetParams(ctx)
-
-	return &types.QueryParamsResponse{Params: params}, nil
+	return &types.QueryDutyMetadataResponse{Metadata: &meta}, nil
 }
-

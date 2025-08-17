@@ -1,55 +1,29 @@
 syntax = "proto3";
-package duty.types;
+package duty.v1;
 
-import "gogoproto/gogo.proto";
-import "google/api/annotations.proto";
-import "cosmos/base/query/v1beta1/pagination.proto";
+option go_package = "yourapp/x/duty/types";
 
-option go_package = "github.com/cosmos/cosmos-sdk/x/duty/types";
+message QueryDutySetRequest {}
+message DutyValidator {
+  string val_cons_addr = 1;
+  string voting_power  = 2;
+  string checkpoint_pub_key = 3; // flattened for convenience (optional)
+  string checkpoint_storage_uri = 4;
+}
+message QueryDutySetResponse {
+  repeated DutyValidator validators = 1;
+  uint32 quorum_num = 2;
+  uint32 quorum_den = 3;
+}
 
-// Query defines the gRPC querier service.
+message QueryDutyMetadataRequest { string cons_addr = 1; }
+message DutyMetadata {
+  string checkpoint_pub_key = 1;
+  string checkpoint_storage_uri = 2;
+}
+message QueryDutyMetadataResponse { DutyMetadata metadata = 1; }
+
 service Query {
-  // Duty queries a duty by id.
-  rpc Duty(QueryGetDutyRequest) returns (QueryGetDutyResponse) {
-    option (google.api.http).get = "/duty/duty/{id}";
-  }
-
-  // DutyAll queries all duties.
-  rpc DutyAll(QueryAllDutyRequest) returns (QueryAllDutyResponse) {
-    option (google.api.http).get = "/duty/duty";
-  }
-
-  // Params queries the parameters of the module.
-  rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
-    option (google.api.http).get = "/duty/params";
-  }
-}
-
-// QueryGetDutyRequest is request type for the Query/Duty RPC method.
-message QueryGetDutyRequest {
-  string id = 1;
-}
-
-// QueryGetDutyResponse is response type for the Query/Duty RPC method.
-message QueryGetDutyResponse {
-  Duty duty = 1 [(gogoproto.nullable) = false];
-}
-
-// QueryAllDutyRequest is request type for the Query/DutyAll RPC method.
-message QueryAllDutyRequest {
-  cosmos.base.query.v1beta1.PageRequest pagination = 1;
-}
-
-// QueryAllDutyResponse is response type for the Query/DutyAll RPC method.
-message QueryAllDutyResponse {
-  repeated Duty duty = 1 [(gogoproto.nullable) = false];
-  cosmos.base.query.v1beta1.PageResponse pagination = 2;
-}
-
-// QueryParamsRequest is request type for the Query/Params RPC method.
-message QueryParamsRequest {}
-
-// QueryParamsResponse is response type for the Query/Params RPC method.
-message QueryParamsResponse {
-  Params params = 1 [(gogoproto.nullable) = false];
+  rpc DutySet (QueryDutySetRequest) returns (QueryDutySetResponse);
+  rpc DutyMetadata (QueryDutyMetadataRequest) returns (QueryDutyMetadataResponse);
 }

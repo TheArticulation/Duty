@@ -1,145 +1,39 @@
 package types
 
 import (
-	"time"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
-const TypeMsgCreateDuty = "create_duty"
-const TypeMsgUpdateDuty = "update_duty"
-const TypeMsgDeleteDuty = "delete_duty"
+type DutyMetadata struct {
+	// ECDSA secp256k1 public key used to sign Hyperlane checkpoints (hex or 0x…)
+	CheckpointPubKey string `json:"checkpoint_pub_key"`
+	// Public location for signatures (e.g., s3://bucket/prefix or https://…)
+	CheckpointStorageURI string `json:"checkpoint_storage_uri"`
+}
 
-var _ sdk.Msg = &MsgCreateDuty{}
+const (
+	TypeMsgSetDutyMetadata = "set_duty_metadata"
+)
 
-func NewMsgCreateDuty(creator string, title string, description string, duration time.Duration) *MsgCreateDuty {
-	return &MsgCreateDuty{
-		Creator:     creator,
-		Title:       title,
-		Description: description,
-		Duration:    duration,
+type MsgSetDutyMetadata struct {
+	// signer is the consensus validator operator address (valoper…)
+	Signer   string       `json:"signer"`
+	Metadata DutyMetadata `json:"metadata"`
+}
+
+func (m MsgSetDutyMetadata) Route() string { return RouterKey }
+func (m MsgSetDutyMetadata) Type() string  { return TypeMsgSetDutyMetadata }
+func (m MsgSetDutyMetadata) GetSigners() []sdk.AccAddress {
+	addr, _ := sdk.ValAddressFromBech32(m.Signer)
+	return []sdk.AccAddress{sdk.AccAddress(addr.Bytes())}
+}
+func (m MsgSetDutyMetadata) ValidateBasic() error {
+	if _, err := sdk.ValAddressFromBech32(m.Signer); err != nil {
+		return sdkerrors.Wrap(err, "invalid valoper")
 	}
-}
-
-func (msg *MsgCreateDuty) Route() string {
-	return RouterKey
-}
-
-func (msg *MsgCreateDuty) Type() string {
-	return TypeMsgCreateDuty
-}
-
-func (msg *MsgCreateDuty) GetSigners() []sdk.AccAddress {
-	creator, err := sdk.AccAddressFromBech32(msg.Creator)
-	if err != nil {
-		panic(err)
-	}
-	return []sdk.AccAddress{creator}
-}
-
-func (msg *MsgCreateDuty) GetSignBytes() []byte {
-	bz := ModuleCdc.MustMarshalJSON(msg)
-	return sdk.MustSortJSON(bz)
-}
-
-func (msg *MsgCreateDuty) ValidateBasic() error {
-	_, err := sdk.AccAddressFromBech32(msg.Creator)
-	if err != nil {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid creator address (%s)", err)
-	}
-	if msg.Title == "" {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "title cannot be empty")
-	}
-	if msg.Duration <= 0 {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "duration must be positive")
-	}
-	return nil
-}
-
-var _ sdk.Msg = &MsgUpdateDuty{}
-
-func NewMsgUpdateDuty(creator string, id string, title string, description string) *MsgUpdateDuty {
-	return &MsgUpdateDuty{
-		Id:          id,
-		Creator:     creator,
-		Title:       title,
-		Description: description,
-	}
-}
-
-func (msg *MsgUpdateDuty) Route() string {
-	return RouterKey
-}
-
-func (msg *MsgUpdateDuty) Type() string {
-	return TypeMsgUpdateDuty
-}
-
-func (msg *MsgUpdateDuty) GetSigners() []sdk.AccAddress {
-	creator, err := sdk.AccAddressFromBech32(msg.Creator)
-	if err != nil {
-		panic(err)
-	}
-	return []sdk.AccAddress{creator}
-}
-
-func (msg *MsgUpdateDuty) GetSignBytes() []byte {
-	bz := ModuleCdc.MustMarshalJSON(msg)
-	return sdk.MustSortJSON(bz)
-}
-
-func (msg *MsgUpdateDuty) ValidateBasic() error {
-	_, err := sdk.AccAddressFromBech32(msg.Creator)
-	if err != nil {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid creator address (%s)", err)
-	}
-	if msg.Id == "" {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "id cannot be empty")
-	}
-	if msg.Title == "" {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "title cannot be empty")
-	}
-	return nil
-}
-
-var _ sdk.Msg = &MsgDeleteDuty{}
-
-func NewMsgDeleteDuty(creator string, id string) *MsgDeleteDuty {
-	return &MsgDeleteDuty{
-		Id:      id,
-		Creator: creator,
-	}
-}
-
-func (msg *MsgDeleteDuty) Route() string {
-	return RouterKey
-}
-
-func (msg *MsgDeleteDuty) Type() string {
-	return TypeMsgDeleteDuty
-}
-
-func (msg *MsgDeleteDuty) GetSigners() []sdk.AccAddress {
-	creator, err := sdk.AccAddressFromBech32(msg.Creator)
-	if err != nil {
-		panic(err)
-	}
-	return []sdk.AccAddress{creator}
-}
-
-func (msg *MsgDeleteDuty) GetSignBytes() []byte {
-	bz := ModuleCdc.MustMarshalJSON(msg)
-	return sdk.MustSortJSON(bz)
-}
-
-func (msg *MsgDeleteDuty) ValidateBasic() error {
-	_, err := sdk.AccAddressFromBech32(msg.Creator)
-	if err != nil {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid creator address (%s)", err)
-	}
-	if msg.Id == "" {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "id cannot be empty")
+	if len(m.Metadata.CheckpointPubKey) == 0 || len(m.Metadata.CheckpointStorageURI) == 0 {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "missing metadata")
 	}
 	return nil
 }

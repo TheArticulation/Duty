@@ -2,36 +2,31 @@ package keeper
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/duty/types"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
-// Hooks wrapper struct for duty keeper
-type Hooks struct {
-	k Keeper
+// We don't need to write anything on-chain for updates; we emit events
+// so off-chain indexers / agents can react.
+type DutyHooks struct{ k Keeper }
+
+var _ stakingtypes.StakingHooks = DutyHooks{}
+
+func (h DutyHooks) AfterValidatorBonded(ctx sdk.Context, consAddr sdk.ConsAddress, _ sdk.ValAddress) {
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent("duty_validator_bonded", sdk.NewAttribute("cons_addr", consAddr.String())),
+	)
+}
+func (h DutyHooks) AfterValidatorRemoved(ctx sdk.Context, consAddr sdk.ConsAddress, _ sdk.ValAddress) {
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent("duty_validator_removed", sdk.NewAttribute("cons_addr", consAddr.String())),
+	)
 }
 
-var _ types.DutyHooks = Hooks{}
-
-// Hooks returns the duty keeper hooks
-func (k Keeper) Hooks() Hooks {
-	return Hooks{k}
-}
-
-// AfterDutyCreated is called after a duty is created
-func (h Hooks) AfterDutyCreated(ctx sdk.Context, duty types.Duty) error {
-	// Add any logic that should run after a duty is created
-	return nil
-}
-
-// AfterDutyUpdated is called after a duty is updated
-func (h Hooks) AfterDutyUpdated(ctx sdk.Context, duty types.Duty) error {
-	// Add any logic that should run after a duty is updated
-	return nil
-}
-
-// AfterDutyDeleted is called after a duty is deleted
-func (h Hooks) AfterDutyDeleted(ctx sdk.Context, duty types.Duty) error {
-	// Add any logic that should run after a duty is deleted
-	return nil
-}
-
+// Implement other hooks as no-ops for brevity
+func (h DutyHooks) AfterValidatorCreated(sdk.Context, sdk.ValAddress)                          {}
+func (h DutyHooks) BeforeValidatorModified(sdk.Context, sdk.ValAddress)                        {}
+func (h DutyHooks) AfterValidatorBeginUnbonding(sdk.Context, sdk.ConsAddress, sdk.ValAddress)  {}
+func (h DutyHooks) BeforeDelegationCreated(sdk.Context, sdk.ValAddress, sdk.AccAddress)        {}
+func (h DutyHooks) AfterDelegationModified(sdk.Context, sdk.ValAddress, sdk.AccAddress)        {}
+func (h DutyHooks) BeforeDelegationSharesModified(sdk.Context, sdk.ValAddress, sdk.AccAddress) {}
+func (h DutyHooks) AfterUnbondingInitiated(sdk.Context, uint64)                                {}
