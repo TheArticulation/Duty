@@ -16,14 +16,35 @@ The sidecar service bridges the gap between the Cosmos SDK `x/duty` module and H
 
 ```
 Cosmos Chain (x/duty module)
-         ↓
+         ↓ (Events + Queries)
     Sidecar Service
-         ↓
+         ↓ (Event Processing)
     Manifest Generation
-         ↓
+         ↓ (HTTP API)
     Hyperlane Components
     (Relayers, ISMs, Validators)
 ```
+
+## Event-Driven Architecture
+
+The sidecar operates in an event-driven manner, responding to duty module events to maintain real-time manifest updates:
+
+### Event Flow
+
+1. **Event Emission**: Duty module emits events for all state changes
+2. **Event Subscription**: Sidecar subscribes to duty events via Tendermint RPC
+3. **Event Processing**: Sidecar processes events and updates internal state
+4. **Manifest Update**: Sidecar queries current state and generates updated manifest
+5. **Publication**: Updated manifest is published via HTTP API
+
+### Event Types Handled
+
+- **`duty_validator_bonded`**: Validator joins the active set
+- **`duty_validator_removed`**: Validator leaves the active set  
+- **`duty_validator_unbonding`**: Validator begins unbonding process
+- **`duty_metadata_set`**: Validator sets or updates duty metadata
+- **`duty_checkpoint_key_rotated`**: Validator rotates checkpoint signing key
+- **`duty_checkpoint_key_bound`**: Checkpoint key is bound to consensus validator
 
 ## Core Responsibilities
 
@@ -190,6 +211,103 @@ func verifyKeyAttestation(consAddr string, checkpointKey string) bool {
     // 3. Verify storage URI is accessible
     // 4. Generate attestation signature
     return true
+}
+```
+
+## Event Processing Implementation
+
+### Event Subscription
+
+The sidecar subscribes to duty events using Tendermint RPC:
+
+```go
+// Subscribe to duty events
+func subscribeToDutyEvents(rpcURL string) error {
+    client := rpc.NewHTTP(rpcURL, "/websocket")
+    
+    // Subscribe to all duty events
+    query := "tm.event='Tx' AND duty"
+    subscriber, err := client.Subscribe(context.Background(), "duty-events", query)
+    if err != nil {
+        return err
+    }
+    
+    for {
+        select {
+        case event := <-subscriber:
+            processDutyEvent(event)
+        case <-ctx.Done():
+            return nil
+        }
+    }
+}
+```
+
+### Event Processing Logic
+
+```go
+func processDutyEvent(event Event) {
+    switch event.Type {
+    case "duty_validator_bonded":
+        handleValidatorBonded(event)
+    case "duty_validator_removed":
+        handleValidatorRemoved(event)
+    case "duty_metadata_set":
+        handleMetadataSet(event)
+    case "duty_checkpoint_key_rotated":
+        handleKeyRotation(event)
+    case "duty_checkpoint_key_bound":
+        handleKeyBinding(event)
+    }
+    
+    // Update manifest after processing
+    updateManifest()
+}
+
+func handleValidatorBonded(event Event) {
+    consAddr := event.GetAttribute("cons_addr")
+    valAddr := event.GetAttribute("val_addr")
+    votingPower := event.GetAttribute("voting_power")
+    
+    // Add validator to manifest
+    manifest.Validators[consAddr] = Validator{
+        ConsensusAddress: consAddr,
+        ValAddr:         valAddr,
+        VotingPower:     votingPower,
+    }
+    
+    log.Infof("Validator %s bonded with voting power %s", valAddr, votingPower)
+}
+```
+
+### Manifest Update Strategy
+
+The sidecar uses a hybrid approach for manifest updates:
+
+1. **Event-Driven Updates**: Immediate updates when events are received
+2. **Periodic Reconciliation**: Regular polling to ensure consistency
+3. **State Verification**: Query current state to validate manifest accuracy
+
+```go
+func updateManifest() {
+    // Query current duty set for complete state
+    dutySet, err := queryDutySet()
+    if err != nil {
+        log.Errorf("Failed to query duty set: %v", err)
+        return
+    }
+    
+    // Update manifest with current state
+    manifest.ChainID = dutySet.ChainID
+    manifest.Quorum = dutySet.Quorum
+    manifest.Validators = dutySet.Validators
+    manifest.AsOfHeight = dutySet.BlockHeight
+    manifest.LastUpdated = time.Now().UTC()
+    
+    // Write manifest to file
+    writeManifest(manifest)
+    
+    log.Infof("Manifest updated at height %d", dutySet.BlockHeight)
 }
 ```
 

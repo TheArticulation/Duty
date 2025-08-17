@@ -91,15 +91,49 @@ duty query duty-metadata [consensus-address]
 
 For complete CLI documentation with examples and detailed flag descriptions, see [CLI Documentation](docs/README.md).
 
+## Events and Monitoring
+
+The duty module emits comprehensive events for all state changes, enabling real-time monitoring and integration:
+
+### Event Types
+
+- **`duty_validator_bonded`**: Validator joins the active set
+- **`duty_validator_removed`**: Validator leaves the active set
+- **`duty_metadata_set`**: Validator sets or updates duty metadata
+- **`duty_checkpoint_key_rotated`**: Validator rotates checkpoint signing key
+- **`duty_checkpoint_key_bound`**: Checkpoint key is bound to consensus validator
+
+### Real-time Monitoring
+
+```bash
+# Subscribe to duty events
+curl -X GET "http://localhost:26657/subscribe?query=duty_validator_bonded"
+
+# Monitor all duty events
+curl -X GET "http://localhost:26657/subscribe?query=duty"
+```
+
+### Sidecar/Indexer Integration
+
+The sidecar service listens to these events and maintains up-to-date Hyperlane manifests:
+
+1. **Event Subscription**: Sidecar subscribes to duty events via Tendermint RPC
+2. **Real-time Updates**: Manifest updates immediately when events are received
+3. **State Reconciliation**: Periodic polling ensures manifest accuracy
+4. **HTTP API**: Updated manifests available via `/manifest` endpoint
+
+For detailed event documentation and sidecar integration, see [Events Documentation](docs/events.md).
+
 ## Core Features
 
 - **Validator Metadata Management**: Validators can set their Hyperlane checkpoint signer keys and storage URIs
 - **Automatic Duty Set Updates**: The duty set automatically updates when validators join/leave the consensus set
 - **Quorum Configuration**: Configurable quorum fractions for Hyperlane checkpoint verification
-- **Event Emission**: Events are emitted for validator lifecycle changes and metadata updates
+- **Comprehensive Event System**: Real-time events for validator lifecycle changes, metadata updates, and key management
 - **gRPC Query Interface**: Clean API for querying duty information
 - **Deterministic Key Mapping**: Canonical binding between consensus validators and Hyperlane checkpoint signers
 - **Sidecar Integration**: Lightweight service for producing machine-readable Hyperlane manifests
+- **Event-Driven Architecture**: Enables real-time monitoring and indexer integration
 
 ## Integration with Hyperlane
 
@@ -116,6 +150,7 @@ The `x/duty` module is designed to work seamlessly with Hyperlane:
 
 - [Module Overview](docs/overview.md) - Detailed technical documentation
 - [CLI Documentation](docs/README.md) - Complete command-line interface reference
+- [Events Documentation](docs/events.md) - Event types and sidecar/indexer integration
 - [Sidecar Setup](docs/sidecar.md) - Lightweight service for Hyperlane integration
 - [API Reference](docs/api.md) - Complete API documentation
 - [Integration Guide](docs/integration.md) - How to integrate with your app
