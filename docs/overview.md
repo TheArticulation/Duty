@@ -71,6 +71,7 @@ type DutyMetadata struct {
 - Only validators can set their own metadata
 - Metadata is stored by consensus address (not operator address)
 - Automatic validation of address formats and metadata completeness
+- Deterministic key mapping between consensus validators and Hyperlane checkpoint signers
 
 ### 2. Duty Set Queries
 
@@ -159,6 +160,8 @@ type Params struct {
 - **Storage URIs**: Public locations where signatures are stored
 - **Quorum Fraction**: Determines how many signatures are required
 - **Validator Set**: Always matches the consensus validator set
+- **Deterministic Storage**: Standardized layout for checkpoint signatures
+- **Sidecar Manifest**: Machine-readable validator set information
 
 ### Example Integration
 
@@ -265,6 +268,7 @@ The module emits events for important state changes:
 1. **Cosmos SDK Validator**: You must be a bonded validator in the Cosmos SDK staking module
 2. **Hyperlane Validator Software**: Install and configure Hyperlane validator software
 3. **Storage Solution**: Set up public storage for checkpoint signatures (S3, IPFS, etc.)
+4. **Sidecar Service**: Deploy the duty sidecar for manifest generation (optional but recommended)
 
 ### Configuration Steps
 
@@ -300,12 +304,14 @@ The module emits events for important state changes:
    ```yaml
    # hyperlane-validator.yaml
    validator:
+     manifest_url: "http://sidecar:8080/manifest"  # Use sidecar manifest
      checkpoint_signer:
        type: "local"
        key: "checkpoint_key.pem"
      storage:
        type: "s3"
        bucket: "my-hyperlane-checkpoints"
+       prefix: "hyperlane/cosmoshub-4/validators/cosmosvalcons1.../"
        region: "us-east-1"
    ```
 
@@ -315,6 +321,8 @@ The module emits events for important state changes:
 - **Unified Governance**: Validator set changes automatically propagate to Hyperlane
 - **Reduced Complexity**: No separate validator management processes
 - **Enhanced Security**: Validators with the most stake automatically secure cross-chain messaging
+- **Deterministic Attestation**: Canonical binding between consensus validators and Hyperlane checkpoint signers
+- **Standardized Integration**: Machine-readable manifests for Hyperlane components
 
 ## For Developers
 
@@ -465,6 +473,9 @@ type DutyMetadata struct {
 - **Storage Verification**: On-chain verification of storage availability
 - **Performance Metrics**: Tracking of validator participation and performance
 - **Multi-Chain Support**: Support for multiple Hyperlane domains
+- **Sidecar Integration**: Lightweight service for manifest generation
+- **Deterministic Storage**: Standardized layout for checkpoint signatures
+- **Key Attestation**: Canonical binding between consensus and Hyperlane validators
 
 ## Conclusion
 

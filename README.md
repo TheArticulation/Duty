@@ -10,6 +10,7 @@ The `x/duty` module provides a bridge between Cosmos SDK validators and Hyperlan
 - **Exposing validator metadata** (checkpoint signer keys, storage URIs) on-chain
 - **Automatically updating** the duty set when validators join/leave the consensus set
 - **Providing quorum management** for Hyperlane checkpoint verification
+- **Creating deterministic key mappings** between consensus validators and Hyperlane checkpoint signers
 
 This eliminates the need for off-chain governance of Hyperlane validator sets and ensures that the same validators securing your Cosmos chain are also securing your cross-chain messaging.
 
@@ -59,6 +60,8 @@ q duty duty-metadata cosmosvalcons1...
 - **Quorum Configuration**: Configurable quorum fractions for Hyperlane checkpoint verification
 - **Event Emission**: Events are emitted for validator lifecycle changes and metadata updates
 - **gRPC Query Interface**: Clean API for querying duty information
+- **Deterministic Key Mapping**: Canonical binding between consensus validators and Hyperlane checkpoint signers
+- **Sidecar Integration**: Lightweight service for producing machine-readable Hyperlane manifests
 
 ## Integration with Hyperlane
 
@@ -68,10 +71,13 @@ The `x/duty` module is designed to work seamlessly with Hyperlane:
 2. **On-Chain Metadata**: Checkpoint signer keys and storage locations are stored on-chain
 3. **Quorum Verification**: Relayers and ISMs can query the duty set to verify checkpoint signatures
 4. **Automatic Updates**: No manual intervention needed when the validator set changes
+5. **Deterministic Attestation**: Canonical binding between consensus validators and Hyperlane checkpoint signers
+6. **Sidecar Manifest**: Machine-readable validator set manifest for Hyperlane components
 
 ## Documentation
 
 - [Module Overview](docs/overview.md) - Detailed technical documentation
+- [Sidecar Setup](docs/sidecar.md) - Lightweight service for Hyperlane integration
 - [API Reference](docs/api.md) - Complete API documentation
 - [Integration Guide](docs/integration.md) - How to integrate with your app
 
