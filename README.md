@@ -53,6 +53,44 @@ q duty duty-metadata cosmosvalcons1...
 }
 ```
 
+## Command Line Interface
+
+The duty module provides a comprehensive CLI for managing validator duties:
+
+### Transaction Commands
+
+```bash
+# Set duty metadata for a validator
+duty tx set-duty-metadata [signer] [checkpoint-pub-key] [checkpoint-storage-uri]
+
+# Rotate checkpoint signing key
+duty tx rotate-checkpoint-key [signer] [new-checkpoint-pub-key] [attestation-signature]
+
+# Bind checkpoint key to consensus validator
+duty tx bind-checkpoint-key [signer] [checkpoint-pub-key] [binding-signature] [consensus-address]
+```
+
+### Query Commands
+
+```bash
+# Query the current duty set
+duty query duty-set
+
+# Query metadata for a specific validator
+duty query duty-metadata [consensus-address]
+```
+
+### Global Flags
+
+```bash
+--chain-id string     The network chain ID
+--home string         Directory for config and data
+--output string       Output format (text|json)
+--node string         <host>:<port> to tendermint rpc interface
+```
+
+For complete CLI documentation with examples and detailed flag descriptions, see [CLI Documentation](docs/README.md).
+
 ## Core Features
 
 - **Validator Metadata Management**: Validators can set their Hyperlane checkpoint signer keys and storage URIs
@@ -77,6 +115,7 @@ The `x/duty` module is designed to work seamlessly with Hyperlane:
 ## Documentation
 
 - [Module Overview](docs/overview.md) - Detailed technical documentation
+- [CLI Documentation](docs/README.md) - Complete command-line interface reference
 - [Sidecar Setup](docs/sidecar.md) - Lightweight service for Hyperlane integration
 - [API Reference](docs/api.md) - Complete API documentation
 - [Integration Guide](docs/integration.md) - How to integrate with your app

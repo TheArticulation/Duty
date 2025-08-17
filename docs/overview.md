@@ -421,6 +421,48 @@ func (app *App) registerAPIRoutes() {
 }
 ```
 
+### Module Configuration
+
+The duty module can be configured through the `app_config.yaml` file using the module configuration proto:
+
+```yaml
+# app_config.yaml
+modules:
+  duty:
+    quorum_num: 2
+    quorum_den: 3
+```
+
+This configuration sets the default quorum fraction for Hyperlane checkpoint verification. The module will use these values as defaults when initializing parameters.
+
+**Configuration Options:**
+- `quorum_num`: Numerator of the quorum fraction (default: 2)
+- `quorum_den`: Denominator of the quorum fraction (default: 3)
+
+**Example Configurations:**
+
+```yaml
+# Conservative quorum (75%)
+modules:
+  duty:
+    quorum_num: 3
+    quorum_den: 4
+
+# Simple majority (51%)
+modules:
+  duty:
+    quorum_num: 51
+    quorum_den: 100
+
+# Default 2/3 quorum
+modules:
+  duty:
+    quorum_num: 2
+    quorum_den: 3
+```
+
+The module configuration is automatically injected into the `ProvideModule` function through the dependency injection framework, allowing for easy customization of default parameters without code changes.
+
 ### Testing
 
 ```bash

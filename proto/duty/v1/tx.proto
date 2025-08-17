@@ -1,0 +1,64 @@
+syntax = "proto3";
+package duty.v1;
+
+import "gogoproto/gogo.proto";
+import "google/protobuf/empty.proto";
+
+option go_package = "github.com/TheArticulation/Duty/x/duty/types";
+
+// Msg defines the duty Msg service.
+service Msg {
+  // SetDutyMetadata sets the duty metadata for a validator
+  rpc SetDutyMetadata(MsgSetDutyMetadata) returns (google.protobuf.Empty);
+  
+  // RotateCheckpointKey rotates the checkpoint signing key for a validator
+  rpc RotateCheckpointKey(MsgRotateCheckpointKey) returns (google.protobuf.Empty);
+  
+  // BindCheckpointKey creates a canonical binding between consensus validator and checkpoint key
+  rpc BindCheckpointKey(MsgBindCheckpointKey) returns (google.protobuf.Empty);
+}
+
+// MsgSetDutyMetadata defines the SetDutyMetadata message
+message MsgSetDutyMetadata {
+  // signer is the consensus validator operator address (valoper...)
+  string signer = 1;
+  
+  // metadata contains the duty metadata
+  DutyMetadata metadata = 2 [(gogoproto.nullable) = false];
+}
+
+// MsgRotateCheckpointKey defines the RotateCheckpointKey message
+message MsgRotateCheckpointKey {
+  // signer is the consensus validator operator address (valoper...)
+  string signer = 1;
+  
+  // new_checkpoint_pub_key is the new ECDSA secp256k1 public key
+  string new_checkpoint_pub_key = 2;
+  
+  // attestation_signature is a signature proving ownership of the new key
+  string attestation_signature = 3;
+}
+
+// MsgBindCheckpointKey defines the BindCheckpointKey message
+message MsgBindCheckpointKey {
+  // signer is the consensus validator operator address (valoper...)
+  string signer = 1;
+  
+  // checkpoint_pub_key is the ECDSA secp256k1 public key to bind
+  string checkpoint_pub_key = 2;
+  
+  // binding_signature is a signature proving the binding
+  string binding_signature = 3;
+  
+  // consensus_address is the consensus address to bind to
+  string consensus_address = 4;
+}
+
+// DutyMetadata contains the duty metadata for a validator
+message DutyMetadata {
+  // checkpoint_pub_key is the ECDSA secp256k1 public key used to sign Hyperlane checkpoints
+  string checkpoint_pub_key = 1;
+  
+  // checkpoint_storage_uri is the public location for signatures
+  string checkpoint_storage_uri = 2;
+}

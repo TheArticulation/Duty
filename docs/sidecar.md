@@ -28,9 +28,10 @@ Cosmos Chain (x/duty module)
 ## Core Responsibilities
 
 ### 1. Event Monitoring
-- Polls `/duty.DutySet` every N blocks (configurable)
-- Listens for `duty_validator_bonded` and `duty_validator_removed` events
-- Triggers manifest updates on validator set changes
+- **Real-time Event Processing**: Listens for duty module events via Tendermint RPC
+- **Event Types**: Processes `duty_validator_bonded`, `duty_validator_removed`, `duty_metadata_set`, `duty_checkpoint_key_rotated`, and `duty_checkpoint_key_bound` events
+- **Polling Fallback**: Polls `/duty.DutySet` every N blocks as a backup mechanism
+- **Immediate Updates**: Triggers manifest updates immediately when events are received
 
 ### 2. Manifest Generation
 Produces a standardized JSON manifest:

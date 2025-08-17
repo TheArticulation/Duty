@@ -1,0 +1,13 @@
+syntax = "proto3";
+package duty.module.v1;
+
+option go_package = "github.com/TheArticulation/Duty/x/duty/modulev1";
+
+// Module is the config object for the duty module.
+message Module {
+  // quorum_num defines the numerator of the quorum fraction
+  uint32 quorum_num = 1;
+  
+  // quorum_den defines the denominator of the quorum fraction
+  uint32 quorum_den = 2;
+}
